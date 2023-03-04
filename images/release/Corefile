@@ -1,0 +1,162 @@
+# DNS: {name}.devices.joris
+devices.joris:53 {
+	# Reload Corefile every 5s.
+	reload 5s
+
+	# Enable verbose logging.
+	log
+	debug
+	errors
+	
+	# Cache results for 300 seconds (5 minutes).
+	#cache 300
+	
+	# Bind only to loopback and Tailscale IP addresses.
+	bind 127.0.0.1
+	bind ::1
+	bind {$TS_IPV4}
+	bind {$TS_IPV6}
+	
+	# Rewrite {name}.devices.joris to {name}.pug-universe.ts.net
+	rewrite continue {
+		name regex (.+).devices.joris.$ {1}.pug-universe.ts.net.
+		answer name (.+).pug-universe.ts.net. {1}.devices.joris.
+	}
+	
+	# Delegate device name resolution to Tailscale MagicDNS.
+	forward . dns://100.100.100.100
+}
+
+# Localhost {name}.joris => {name}.devices.joris resolver
+.:5301 {
+	bind 127.0.0.1
+	bind ::1
+	
+	log
+	debug
+	errors
+
+	rewrite continue {
+		name regex (.+).joris.$ {1}.devices.joris.
+		answer name (.+).devices.joris.$ {1}.joris.
+	}
+	
+	forward . dns://127.0.0.1
+}
+
+# DNS: {name}.services.joris
+services.joris:53 {
+	reload 5s
+	
+	log
+	debug
+	errors
+
+	bind 127.0.0.1
+	bind ::1
+	bind {$TS_IPV4}
+	bind {$TS_IPV6}
+	
+	# Rewrite {name}.services.joris to {name}.services.joris.me
+	# (Managed in Cloudflare, public DNS but links to private IPs)
+	rewrite continue {
+			name regex (.+).services.joris.$ {1}.services.joris.me.
+			answer name (.+).services.joris.me. {1}.services.joris.
+	}
+
+	# Delegate service name resolution to Cloudflare.
+	forward . tls://1.1.1.1 tls://1.0.0.1 {
+		tls_servername cloudflare-dns.com
+	}
+}
+
+# Localhost {name}.joris => {name}.services.joris resolver
+.:5302 {
+	bind 127.0.0.1
+	bind ::1
+	
+	log
+	debug
+	errors
+
+	rewrite continue {
+		name regex (.+).joris.$ {1}.services.joris.
+		answer name (.+).services.joris.$ {1}.joris.
+	}
+	
+	forward . dns://127.0.0.1
+}
+
+# DNS: {name}.joris
+#   => Tries to resolve {name}.services.joris and {name}.devices.joris.
+joris:53 {
+	reload 5s
+	
+	log
+	debug
+	errors
+
+	bind 127.0.0.1
+	bind ::1
+	bind {$TS_IPV4}
+	bind {$TS_IPV6}
+	
+	# Forward {name}.joris to {name}.services.joris and {name}.devices.joris resolvers.
+	forward joris dns://127.0.0.1:5302
+	forward joris dns://127.0.0.1:5301
+}
+
+# DNS: Literally anything else.
+.:53 {
+	reload 5s
+	
+	log
+	debug
+	errors
+
+	bind 127.0.0.1
+	bind ::1
+	bind {$TS_IPV4}
+	bind {$TS_IPV6}
+
+	# Rewrite {name}. (without TLD!) to {name}.joris.
+	# This is effectively mimicking a search.
+	rewrite continue {
+			name regex ^([^.]+).$ {1}.joris.
+			answer name (.+).joris.$ {1}.
+	}
+
+	# Forward hostname-only to the "joris" zone.
+	forward joris 127.0.0.1:5301 127.0.0.1:5302
+	
+	# Forward everything else to Cloudflare.
+	forward . tls://1.1.1.1 tls://1.0.0.1 {
+			tls_servername cloudflare-dns.com
+	}
+}	
+
+# DNS over TLS: Cert required, redirect to other zones internally.
+tls://. {
+	log
+	errors
+	debug
+
+	tls /etc/coredns/cert.crt /etc/coredns/cert.pem {
+		client_auth nocert
+	}
+
+	forward . dns://127.0.0.1
+}
+
+# DNS over HTTPS: Cert required, redirect to other zones internally.
+https://. {
+	log
+	errors
+	debug
+	
+	tls /etc/coredns/cert.crt /etc/coredns/cert.pem {
+		client_auth nocert
+	}
+
+	forward . dns://127.0.0.1
+}

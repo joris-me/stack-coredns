@@ -1,0 +1,33 @@
+# Mock Tailscale MagicDNS server. Returns fixed A and AAAA records for three devices:
+#   - device1
+#   - device2
+#   - device3
+#
+# The last digit of every IP address returned matches the number of the device. For example, the
+# device called "device1" resolves to the following records:
+#   A       x.x.x.1
+#   AAAA    x:x:x:x::1
+#
+# Environment variables needed to function:
+#   TS_NET      The unique name of your tailscale universe, WITHOUT the .ts.net suffix.
+#                   e.g. if your network is resolvable at purple-turtle.ts.net, then your TS_NET
+#                   would be "purple-turtle" (without quotes).
+#   TS_PORT     The port to listen on. Defaults to 53 if unspecified.
+#
+{$TS_NET}.ts.net:{$TS_PORT:53} {
+    bind 0.0.0.0
+
+    log
+    debug
+    errors
+    
+    # Fixed records returning 3 static Tailscale devices.
+    records {
+        device1     IN A        100.0.0.1
+        device1     IN AAAA     fd7a:115c:a1e0:ab12::1
+        device2     IN A        100.0.0.2
+        device2     IN AAAA     fd7a:115c:a1e0:ab12::2
+        device3     IN A        100.0.0.3
+        device3     IN AAAA     fd7a:115c:a1e0:ab12::3
+    }
+}
