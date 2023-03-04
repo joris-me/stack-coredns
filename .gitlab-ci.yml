@@ -19,8 +19,8 @@ build:
 
 test:
   stage: test
-    script:
-      - echo "This job tests something"
+  script:
+    - echo "This job tests something"
 
 deploy-prod:
   stage: deploy
