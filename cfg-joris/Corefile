@@ -1,5 +1,14 @@
-# DNS: {name}.devices.joris
-devices.joris:53 {
+# Environment variables:
+# 	TS_IPV4				the IPv4 address of the Tailscale node this container runs on
+#	TS_IPV6				the IPv6 address of the Tailscale node this container runs on
+#	TLD					the desired TLD this resolver will resolve
+#	DEVICE_SUBDOMAIN	the subdomain wherein devices will be resolved (`devices`)
+#	DEVICE_TRANSFORM	what to transform device domains to
+#	SERVICE_SUBDOMAIN	the subdomain wherein services will be resolved (`services`)
+#	SERVICE_TRANSFORM	what to transform service domains to
+
+# Device resolver: {input}.{devices}.{tld}
+{$DEVICE_SUBDOMAIN}.{$TLD}:53 {
 	# Reload Corefile every 5s.
 	reload 5s
 
@@ -17,17 +26,17 @@ devices.joris:53 {
 	bind {$TS_IPV4}
 	bind {$TS_IPV6}
 	
-	# Rewrite {name}.devices.joris to {name}.pug-universe.ts.net
+	# Rewrite {name}.{$DEVICE_SUBDOMAIN}.{$TLD} to {name}.{$DEVICE_TRANSFORM}
 	rewrite continue {
-		name regex (.+).devices.joris.$ {1}.pug-universe.ts.net.
-		answer name (.+).pug-universe.ts.net. {1}.devices.joris.
+		name regex (.+).{$DEVICE_SUBDOMAIN}.{$TLD}.$ {1}.{$DEVICE_TRANSFORM}.
+		answer name (.+).{$DEVICE_TRANSFORM}. {1}.{$DEVICE_SUBDOMAIN}.{$TLD}.
 	}
 	
 	# Delegate device name resolution to Tailscale MagicDNS.
 	forward . dns://100.100.100.100
 }
 
-# Localhost {name}.joris => {name}.devices.joris resolver
+# Device transformer: {name}.{tld} to {name}.{devices}.{tld}
 .:5301 {
 	bind 127.0.0.1
 	bind ::1
@@ -37,15 +46,15 @@ devices.joris:53 {
 	errors
 
 	rewrite continue {
-		name regex (.+).joris.$ {1}.devices.joris.
-		answer name (.+).devices.joris.$ {1}.joris.
+		name regex (.+).{$TLD}.$ {1}.{$DEVICE_SUBDOMAIN}.{$TLD}.
+		answer name (.+).{$DEVICE_SUBDOMAIN}.{$TLD}.$ {1}.{$TLD}.
 	}
 	
 	forward . dns://127.0.0.1
 }
 
-# DNS: {name}.services.joris
-services.joris:53 {
+# Service resolver: {input}.{services}.{tld}
+{$SERVICE_SUBDOMAIN}.{$TLD}:53 {
 	reload 5s
 	
 	log
@@ -57,11 +66,11 @@ services.joris:53 {
 	bind {$TS_IPV4}
 	bind {$TS_IPV6}
 	
-	# Rewrite {name}.services.joris to {name}.services.joris.me
+	# Rewrite {name}.{$SERVICE_TRANSFORM}.{$TLD} to {name}.{$SERVICE_TRANSFORM}.{$TLD}.me
 	# (Managed in Cloudflare, public DNS but links to private IPs)
 	rewrite continue {
-			name regex (.+).services.joris.$ {1}.services.joris.me.
-			answer name (.+).services.joris.me. {1}.services.joris.
+			name regex (.+).{$SERVICE_TRANSFORM}.{$TLD}.$ {1}.{$SERVICE_TRANSFORM}.{$TLD}.me.
+			answer name (.+).{$SERVICE_TRANSFORM}.{$TLD}.me. {1}.{$SERVICE_TRANSFORM}.{$TLD}.
 	}
 
 	# Delegate service name resolution to Cloudflare.
@@ -70,7 +79,7 @@ services.joris:53 {
 	}
 }
 
-# Localhost {name}.joris => {name}.services.joris resolver
+# Service transformer: {input}.{tld} to {input}.{services}.{tld}
 .:5302 {
 	bind 127.0.0.1
 	bind ::1
@@ -80,16 +89,17 @@ services.joris:53 {
 	errors
 
 	rewrite continue {
-		name regex (.+).joris.$ {1}.services.joris.
-		answer name (.+).services.joris.$ {1}.joris.
+		name regex (.+).{$TLD}.$ {1}.{$SERVICE_TRANSFORM}.{$TLD}.
+		answer name (.+).{$SERVICE_TRANSFORM}.{$TLD}.$ {1}.{$TLD}.
 	}
 	
 	forward . dns://127.0.0.1
 }
 
-# DNS: {name}.joris
-#   => Tries to resolve {name}.services.joris and {name}.devices.joris.
-joris:53 {
+# Disambiguating TLD resolver: {name}.{tld}
+#	=> Tries to resolve {name}.{services}.{tld}, with fallthrough
+# 	=> Tries to resolve {name}.{devices}.{tld}, with fallthrough
+{$TLD}:53 {
 	reload 5s
 	
 	log
@@ -100,13 +110,19 @@ joris:53 {
 	bind ::1
 	bind {$TS_IPV4}
 	bind {$TS_IPV6}
+
+	# 1. Forward to the service transformer.
+	forward {$TLD} dns://127.0.0.1:5302
 	
-	# Forward {name}.joris to {name}.services.joris and {name}.devices.joris resolvers.
-	forward joris dns://127.0.0.1:5302
-	forward joris dns://127.0.0.1:5301
+	# 2. Service resolution fails => NXDOMAIN is returned
+	# 	 Next, we try the device transformer. 
+	alternate original NXDOMAIN dns://127.0.0.1:5302
+
+	# 3. Device transformer fails.
+	#    Do nothing.
 }
 
-# DNS: Literally anything else.
+# Local and internal ingress -- unsecured
 .:53 {
 	reload 5s
 	
@@ -119,15 +135,15 @@ joris:53 {
 	bind {$TS_IPV4}
 	bind {$TS_IPV6}
 
-	# Rewrite {name}. (without TLD!) to {name}.joris.
+	# Rewrite {name}. (without TLD!) to {name}.{$TLD}.
 	# This is effectively mimicking a search.
 	rewrite continue {
-			name regex ^([^.]+).$ {1}.joris.
-			answer name (.+).joris.$ {1}.
+			name regex ^([^.]+).$ {1}.{$TLD}.
+			answer name (.+).{$TLD}.$ {1}.
 	}
 
-	# Forward hostname-only to the "joris" zone.
-	forward joris 127.0.0.1:5301 127.0.0.1:5302
+	# Forward hostname-only to the {$TLD} zone.
+	forward {$TLD} 127.0.0.1:5301 127.0.0.1:5302
 	
 	# Forward everything else to Cloudflare.
 	forward . tls://1.1.1.1 tls://1.0.0.1 {
@@ -135,7 +151,7 @@ joris:53 {
 	}
 }	
 
-# DNS over TLS: Cert required, redirect to other zones internally.
+# Public ingress (TLS) -- secured 
 tls://. {
 	log
 	errors
@@ -148,7 +164,7 @@ tls://. {
 	forward . dns://127.0.0.1
 }
 
-# DNS over HTTPS: Cert required, redirect to other zones internally.
+# Public ingress (HTTPS) -- secured
 https://. {
 	log
 	errors

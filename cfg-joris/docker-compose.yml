@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  dns:
+    image: registry.gitlab.com/jorisnet/joris-dns:master
+    volumes:
+      - ./Corefile:/etc/coredns/Corefile:ro
+    ports:
+      - "53:53/udp"
+      - "443:443/tcp"
+      - "853:853/tcp"
+    environment:
+      TS_IPV4: 
+      TS_IPV6:
+      
+      # The TLD we are authoritative for.
+      TLD: joris
+
+      # The subdomain of our TLD where we resolve devices.
+      # Resolved via Tailscale MagicDNS (100.100.100.100).
+      DEVICE_SUBDOMAIN: devices
+      DEVICE_TRANSFORM: pug-universe.ts.net
+      
+      # The subdomain of our TLD where we resolve services.
+      # Always resolved using Cloudflare over TLS (1.1.1.1).
+      SERVICE_SUBDOMAIN: services
+      SERVICE_TRANSFORM: services.joris.me

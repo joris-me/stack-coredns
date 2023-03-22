@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  mock-tailscale:
+    image: registry.gitlab.com/jorisnet/joris-dns:master
+    volumes:
+      - ./Corefile:/etc/coredns/Corefile:ro
+    ports:
+      - "8000:5000"
+    environment:
+      TS_NETWORK: hypothetical-anglerfish
