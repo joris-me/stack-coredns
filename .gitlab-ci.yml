@@ -17,10 +17,10 @@ build-se:
     - docker build -t $IMAGE_TAG coredns/
     - docker push $IMAGE_TAG
 
-test:
-  stage: test
-  script:
-    - echo "This job tests something"
+# test:
+#   stage: test
+#   script:
+#     - echo "This job tests something"
 
 deploy:
   image: alpine:latest
