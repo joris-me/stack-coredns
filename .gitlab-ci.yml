@@ -4,7 +4,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 # Build the CoreDNS base image.
-build-base:
+build-se:
   image: docker:latest
   stage: build
   # Specify an additional image 'docker:dind' ("Docker-in-Docker") that
@@ -36,4 +36,8 @@ deploy:
     - chmod 644 ~/.ssh/known_hosts
   script:
     - env
+    - ssh ns1.joris.me
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker pull $IMAGE_TAG
+    - docker logout
   environment: production
