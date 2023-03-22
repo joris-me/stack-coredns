@@ -26,7 +26,7 @@ build-base:
   services:
     - docker:dind
   script:
-    - echo "Hello, $GITLAB_USER_LOGIN! The tag is: $IMAGE_TAG"
+    - echo "Hello, $GITLAB_USER_LOGIN! The tag is $IMAGE_TAG"
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE_TAG coredns/
     - docker push $IMAGE_TAG
