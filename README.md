@@ -31,7 +31,7 @@ It can resolve domains in the form of `deviceX.network-name.ts.net`, where:
 - `X` is either `1`, `2` or `3`;
 - `network-name` is replaced with the name of the Tailnet that is being mocked. The `TS_ENV` environment variable is used for specifying this upon startup.
 
-## cfg-joris
+## cfg-prod
 As the name suggests, this is the full production delegating DNS resolver, performing all necessary transformations and delegating to the [dns-mock-cloudflare](#dns-mock-cloudflare) and [dns-mock-tailscale](#dns-mock-tailscale) resolvers when applicable.
 
 # DNS resolution

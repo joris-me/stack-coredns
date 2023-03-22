@@ -4,7 +4,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 # Build the CoreDNS base image.
-build:
+build-base:
   image: docker:latest
   stage: build
   only:
@@ -18,6 +18,24 @@ build:
     - echo "Hello, $GITLAB_USER_LOGIN! Tag is $IMAGE_TAG"
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE_TAG coredns/
+    - docker push $IMAGE_TAG
+
+# Build the production image.
+build-prod:
+  image: docker:latest
+  stage: build
+  only:
+    changes:
+      - coredns/**/*
+      - cfg-prod/**/*
+  # Specify an additional image 'docker:dind' ("Docker-in-Docker") that
+  # will start up the Docker daemon when it is brought up by a runner.
+  services:
+    - docker:dind
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN! Tag is $IMAGE_TAG"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG cfg-prod/
     - docker push $IMAGE_TAG
 
 # test:

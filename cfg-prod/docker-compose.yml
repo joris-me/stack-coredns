@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   dns:
-    image: registry.gitlab.com/jorisnet/joris-dns:master
+    image: registry.gitlab.com/joriskt/joris-dns:master
     volumes:
       - ./Corefile:/etc/coredns/Corefile:ro
     ports:
