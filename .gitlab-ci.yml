@@ -4,9 +4,12 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 # Build the CoreDNS base image.
-build-se:
+build:
   image: docker:latest
   stage: build
+  only:
+    changes:
+      - coredns/**/*
   # Specify an additional image 'docker:dind' ("Docker-in-Docker") that
   # will start up the Docker daemon when it is brought up by a runner.
   services:
