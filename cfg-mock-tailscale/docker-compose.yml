@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   mock-tailscale:
-    image: registry.gitlab.com/jorisnet/joris-dns:master
+    image: ghcr.io/joris-me/stack-coredns:master
     volumes:
       - ./Corefile:/etc/coredns/Corefile:ro
     ports:

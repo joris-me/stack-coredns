@@ -1,4 +1,4 @@
-# joris-dns
+# stack-coredns
 
 The `joris.internal` nameservers are best described as a "composed DNS resolver". The intented use of these nameservers is to function as DNS resolvers that can be used to resolve internal services and devices while also remaining capable of resolving public domain names without any extra configuration being necessary.
 
