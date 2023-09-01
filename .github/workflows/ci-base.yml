@@ -4,6 +4,7 @@ on:
       - master
     paths:
       - "base/**"
+  workflow_dispatch:
 
 name: ci-base
 
