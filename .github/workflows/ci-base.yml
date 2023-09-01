@@ -3,7 +3,7 @@ on:
     branches:
       - master
     paths:
-      - "base/**"
+      - "coredns/**"
   workflow_dispatch:
 
 name: ci-base
