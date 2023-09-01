@@ -3,7 +3,7 @@ on:
     branches:
       - master
     paths:
-      - "/coredns"
+      - "base/**"
 
 name: ci-base
 
