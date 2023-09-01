@@ -1,6 +1,8 @@
 # stack-coredns
 
-The `joris.internal` nameservers are best described as a "composed DNS resolver". The intented use of these nameservers is to function as DNS resolvers that can be used to resolve internal services and devices while also remaining capable of resolving public domain names without any extra configuration being necessary.
+[![ci-base](https://github.com/joris-me/stack-coredns/actions/workflows/ci-base.yml/badge.svg?branch=master)](https://github.com/joris-me/stack-coredns/actions/workflows/ci-base.yml)
+
+The `joris.internal` nameservers are best described as a "composite DNS resolver". The intented use of these nameservers is to function as DNS resolvers that can be used to resolve internal services and devices while also remaining capable of resolving public domain names without any extra configuration being necessary.
 
 ## Examples
 Some examples of the domains that are intended to be specifically resolvable by this project:
