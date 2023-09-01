@@ -1,8 +1,0 @@
-#!/bin/bash
-
-if [ -z $TS_NET ]; then
-    echo "error: TS_NET not set. specify it with the unique name of your Tailscale network, e.g. 'pug-universe'."
-    exit 1
-fi
-
-docker build . -t joris:coredns-mock-tailscale

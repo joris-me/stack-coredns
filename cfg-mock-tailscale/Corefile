@@ -1,5 +1,5 @@
 # Mock Tailscale MagicDNS server.
-{$TS_NETWORK}.ts.net:53 {
+{$TS_NET}.ts.net:53 {
     bind 0.0.0.0
 
     log
@@ -8,13 +8,13 @@
     
     # Fixed records returning 4 static Tailscale devices.
     records {
-        deviceA     IN A    100.0.0.101
-        deviceA     IN AAAA fd7a:115c:a1e0:ab12::1
-        deviceB     IN A    100.0.0.102
-        deviceB     IN AAAA fd7a:115c:a1e0:ab12::2
-        deviceC     IN A    100.0.0.103
-        deviceC     IN AAAA fd7a:115c:a1e0:ab12::3
-        deviceD     IN A    100.0.0.104
-        deviceD     IN AAAA fd7a:115c:a1e0:ab12::4
+        apple       IN A    100.64.0.101
+        apple       IN AAAA fd7a:115c:a1e0:ab12::1
+        banana      IN A    100.64.0.102
+        banana      IN AAAA fd7a:115c:a1e0:ab12::2
+        orange      IN A    100.64.0.103
+        orange      IN AAAA fd7a:115c:a1e0:ab12::3
+        pear        IN A    100.64.0.104
+        pear        IN AAAA fd7a:115c:a1e0:ab12::4
     }
 }
