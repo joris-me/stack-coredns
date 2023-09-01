@@ -9,14 +9,14 @@ updates:
   - package-ecosystem: "docker"
     directory: "/coredns"
     schedule:
-      interval: "weekly"
+      interval: "daily"
 
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/cfg-mock-tailscale" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
 
   - package-ecosystem: "docker"
     directory: "/cfg-prod"
     schedule:
-      interval: "weekly"
+      interval: "daily"
